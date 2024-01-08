@@ -273,6 +273,19 @@ namespace sibr {
 		_meshPath = dataset_path + "/input.ply";
 	}
 
+	void ParseData::getParsedST3DData(const std::string& dataset_path)
+	{
+		_camInfos = InputCamera::loadST3D(dataset_path + "/cameras.txt");
+		_meshPath = dataset_path + "/points3d.ply";
+
+		_basePathName = dataset_path;
+
+		_imgPath = ".";
+
+		populateFromCamInfos();
+
+	}
+
 	void ParseData::getParsedColmap2Data(const std::string& dataset_path, const int fovXfovY_flag, const bool capreal_flag)
 	{
 		_basePathName = dataset_path + "/sparse/0/";
@@ -469,6 +482,7 @@ namespace sibr {
 		std::string chunked = myArgs.dataset_path.get() + "/chunk.dat";
 		std::string blender = myArgs.dataset_path.get() + "/transforms_train.json";
 		std::string gaussian = myArgs.dataset_path.get() + "/cameras.json";
+		std::string st3d = myArgs.dataset_path.get() + "/layout.txt";
 
 		if(datasetTypeStr == "sibr") {
 			if (!sibr::fileExists(bundler))
@@ -525,6 +539,14 @@ namespace sibr {
 
 			_datasetType = Type::BLENDER;
 		}
+		else if (datasetTypeStr == "ST3D")
+		{
+			if (!sibr::fileExists(st3d))
+				SIBR_ERR << "Cannot use dataset_type " + myArgs.dataset_type.get() + " at /" + myArgs.dataset_path.get() + "." << std::endl
+				<< "Reason : ST3D layout (" << st3d << ") does not exist" << std::endl;
+
+			_datasetType = Type::ST3D;
+		}
 		else {
 			if (sibr::fileExists(bundler)) {
 				_datasetType = Type::SIBR;
@@ -556,10 +578,17 @@ namespace sibr {
 			{
 				_datasetType = Type::BLENDER;
 			}
+			else if (sibr::fileExists(st3d))
+			{
+				_datasetType = Type::ST3D;
+				SIBR_LOG << "Dataset type : Structured3D" << std::endl;
+
+			}
 			else {
 				SIBR_ERR << "Cannot determine type of dataset at /" + myArgs.dataset_path.get() + customPath << std::endl;
 			}
 		}
+
 
 		switch(_datasetType) {
 			case Type::GAUSSIAN:			getParsedGaussianData(myArgs.dataset_path); break;
@@ -572,6 +601,7 @@ namespace sibr {
 			case Type::NVM : 			getParsedNVMData(myArgs.dataset_path, customPath, "/nvm/"); break;
 			case Type::MESHROOM : 		if (sibr::directoryExists(meshroom)) getParsedMeshroomData(myArgs.dataset_path.get() + "/../../");
 										else if (sibr::directoryExists(meshroom_sibr)) getParsedMeshroomData(myArgs.dataset_path); break;
+			case Type::ST3D: 			getParsedST3DData(myArgs.dataset_path); break;
 		}
 		
 		// What happens if multiple are present?

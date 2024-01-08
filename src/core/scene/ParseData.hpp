@@ -80,6 +80,8 @@ namespace sibr{
 
 		void getParsedGaussianData(const std::string& dataset_path);
 
+		void getParsedST3DData(const std::string& dataset_path);
+
 		void getParsedBlenderData(const std::string& dataset_path);
 
 		void getParsedChunkedData(const std::string& dataset_path);
